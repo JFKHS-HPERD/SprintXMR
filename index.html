@@ -114,6 +114,7 @@
   <p>&#169; 2024 Lewie Tenorio</p>
     </div>
     <script>
+        
         let sprinters = [];
         let currentSprinter = null;
         let startTime = null;
@@ -121,6 +122,12 @@
         let sprintResults = {};
         let timerRunning = false;
 
+        // Prevent accidental page refresh or close
+        window.addEventListener('beforeunload', (event) => {
+            event.preventDefault();
+            event.returnValue = '';  // Shows a confirmation dialog to the user
+        });
+              
         document.getElementById('load-sprinters').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
             const file = fileInput.files[0];
@@ -183,23 +190,36 @@
             const minutes = ('00' + Math.floor((elapsed / 60000) % 60)).slice(-2);
             document.getElementById('timer').textContent = `${minutes}:${seconds}:${milliseconds}`;
         }
+        
+        function saveResultsToLocal() {
+    localStorage.setItem('sprintResults', JSON.stringify(sprintResults));  // Save results to local storage
+        }
 
+        window.onload = function() {
+    sprintResults = JSON.parse(localStorage.getItem('sprintResults')) || {};  // Load from local storage
+    if (Object.keys(sprintResults).length > 0) {
+        displayResults();  // Display the saved results if there are any
+    }
+};
+        
         document.getElementById('save-time').addEventListener('click', () => {
-            if (currentSprinter && !timerRunning) {
-                const time = document.getElementById('timer').textContent;
-                if (!sprintResults[currentSprinter]) {
-                    sprintResults[currentSprinter] = [];
-                }
-                sprintResults[currentSprinter].push(time);
+    if (currentSprinter && !timerRunning) {
+        const time = document.getElementById('timer').textContent;
+        if (!sprintResults[currentSprinter]) {
+            sprintResults[currentSprinter] = [];
+        }
+        sprintResults[currentSprinter].push(time);
 
-                if (sprintResults[currentSprinter].length === 3) {
-                    document.getElementById('sprinter-list').querySelector(`option[value="${sprinters.indexOf(currentSprinter)}"]`).disabled = true;
-                }
+        if (sprintResults[currentSprinter].length === 3) {
+            document.getElementById('sprinter-list').querySelector(`option[value="${sprinters.indexOf(currentSprinter)}"]`).disabled = true;
+        }
 
-                displayResults();
-                resetTimer();
-            }
+        displayResults();
+        saveResultsToLocal();  // Save results to local storage
+        resetTimer();
+        }
         });
+
 
         document.getElementById('false-start').addEventListener('click', () => {
             resetTimer();
