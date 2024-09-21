@@ -15,7 +15,38 @@
             font-size: 2rem;
             margin-bottom: 20px;
         }
-        #results {
+        #results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #results-table th, #results-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        #results-table th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        #start-stop.start {
+            background-color: green;
+            color: white;
+        }
+        #start-stop.stop {
+            background-color: red;
+            color: white;
+        }
+        #save-time:disabled {
+            background-color: grey;
+            color: white;
+            cursor: not-allowed;
+        }
+        #export-results {
             margin-top: 20px;
         }
     </style>
@@ -32,12 +63,24 @@
 
     <h2>Timer</h2>
     <div id="timer">00:00:00</div>
-    <button id="start-stop">Start</button>
+    <button id="start-stop" class="start">Start</button>
     <button id="save-time" disabled>Save Time</button>
 
     <h2>Recorded Times</h2>
-    <div id="results"></div>
-    
+    <table id="results-table">
+        <thead>
+            <tr>
+                <th>Sprinter</th>
+                <th>Attempt 1</th>
+                <th>Attempt 2</th>
+                <th>Attempt 3</th>
+            </tr>
+        </thead>
+        <tbody id="results-body">
+            <!-- Times will be populated here -->
+        </tbody>
+    </table>
+
     <button id="export-results">Export Results</button>
 
     <script>
@@ -81,14 +124,19 @@
         });
 
         document.getElementById('start-stop').addEventListener('click', () => {
+            const button = document.getElementById('start-stop');
             if (startTime === null) {
                 startTime = Date.now();
                 timerInterval = setInterval(updateTimer, 100);
-                document.getElementById('start-stop').textContent = 'Stop';
+                button.textContent = 'Stop';
+                button.classList.remove('start');
+                button.classList.add('stop');
             } else {
                 clearInterval(timerInterval);
                 startTime = null;
-                document.getElementById('start-stop').textContent = 'Start';
+                button.textContent = 'Start';
+                button.classList.remove('stop');
+                button.classList.add('start');
             }
         });
 
@@ -114,6 +162,7 @@
 
                 displayResults();
                 resetTimer();
+                document.getElementById('save-time').disabled = true;
             }
         });
 
@@ -121,16 +170,29 @@
             document.getElementById('timer').textContent = '00:00:00';
             startTime = null;
             clearInterval(timerInterval);
-            document.getElementById('start-stop').textContent = 'Start';
+            const button = document.getElementById('start-stop');
+            button.textContent = 'Start';
+            button.classList.remove('stop');
+            button.classList.add('start');
+            document.getElementById('save-time').disabled = false;
         }
 
         function displayResults() {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
+            const resultsBody = document.getElementById('results-body');
+            resultsBody.innerHTML = '';
             for (const [sprinter, times] of Object.entries(sprintResults)) {
-                const div = document.createElement('div');
-                div.innerHTML = `<strong>${sprinter}:</strong> ${times.join(', ')}`;
-                resultsDiv.appendChild(div);
+                const row = document.createElement('tr');
+                const sprinterCell = document.createElement('td');
+                sprinterCell.textContent = sprinter;
+                row.appendChild(sprinterCell);
+
+                for (let i = 0; i < 3; i++) {
+                    const timeCell = document.createElement('td');
+                    timeCell.textContent = times[i] || '';
+                    row.appendChild(timeCell);
+                }
+
+                resultsBody.appendChild(row);
             }
         }
 
