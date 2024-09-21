@@ -8,6 +8,11 @@
         body {
             font-family: Arial, sans-serif;
         }
+        .banner-container {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    margin: 20px 0; /* Optional: Add some margin for spacing */
+        }
         #sprinter-list {
             margin-bottom: 20px;
         }
@@ -53,11 +58,24 @@
             background-color: orange;
             color: white;
         }
+        .footer {
+            position: static;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: grey;
+            color: white;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
+    <div class="banner-container">
+    <img src="islanders.png" alt="Islanders" class="banner">
+    </div>
     <h1>Sprint Timing App</h1>
 
+    <!-- Class Period Input Field -->
     <label for="class-period">Class Period:</label>
     <input type="text" id="class-period" placeholder="Enter Class Period">
 
@@ -91,20 +109,17 @@
     </table>
 
     <button id="export-results">Export Results</button>
-
+     <!-- Footer -->
+    <div class="footer">
+  <p>&#169; 2024 Lewie Tenorio</p>
+    </div>
     <script>
         let sprinters = [];
         let currentSprinter = null;
         let startTime = null;
         let timerInterval = null;
-        let sprintResults = JSON.parse(localStorage.getItem('sprintResults')) || {}; // Load from local storage
+        let sprintResults = {};
         let timerRunning = false;
-
-        window.addEventListener('beforeunload', (event) => {
-            // Warn user before closing or refreshing the page
-            event.preventDefault();
-            event.returnValue = '';
-        });
 
         document.getElementById('load-sprinters').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
@@ -182,7 +197,6 @@
                 }
 
                 displayResults();
-                saveResultsToLocal(); // Save results to local storage
                 resetTimer();
             }
         });
@@ -225,21 +239,11 @@
             }
         }
 
-        function saveResultsToLocal() {
-            localStorage.setItem('sprintResults', JSON.stringify(sprintResults)); // Save results to local storage
-        }
-
-        // Restore results from local storage on page load
-        window.onload = function() {
-            if (Object.keys(sprintResults).length > 0) {
-                displayResults();
-            }
-        };
-
-        document.getElementById('export-results').addEventListener('click', () => {
-            const csvContent = 'data:text/csv;charset=utf-8,' +
-                Object.entries(sprintResults).map(([sprinter, times]) =>
-                    `${sprinter},${times.map(formatTimeForCSV).join('\n');
+       document.getElementById('export-results').addEventListener('click', () => {
+    // Format times into 'hh:mm:ss.fff' for Excel to interpret correctly
+    const csvContent = 'data:text/csv;charset=utf-8,' +
+        Object.entries(sprintResults).map(([sprinter, times]) =>
+            `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
     
     const classPeriod = document.getElementById('class-period').value.trim();
     const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
