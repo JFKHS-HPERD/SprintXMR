@@ -94,7 +94,7 @@
         let startTime = null;
         let timerInterval = null;
         let sprintResults = {};
-        let timerRunning = false;
+        let timerRunning = false; // Track the timer state
 
         document.getElementById('load-sprinters').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
@@ -186,15 +186,16 @@
         function resetTimer() {
             document.getElementById('timer').textContent = '00:00:00';
             startTime = null;
-            clearInterval(timerInterval);
-            timerRunning = false;
+            clearInterval(timerInterval); // Ensuring the interval is cleared
+            timerRunning = false; // Resetting the timer state
 
-            // Reset the Start/Stop button
+            // Reset the Start/Stop button to 'Start' mode
             const button = document.getElementById('start-stop');
             button.textContent = 'Start';
             button.classList.remove('stop');
             button.classList.add('start');
 
+            // Disable buttons until a new sprint starts
             document.getElementById('save-time').disabled = true;
             document.getElementById('false-start').disabled = true;
         }
