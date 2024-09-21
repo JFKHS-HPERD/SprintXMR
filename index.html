@@ -8,6 +8,11 @@
         body {
             font-family: Arial, sans-serif;
         }
+        .banner-container {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    margin: 20px 0; /* Optional: Add some margin for spacing */
+        }
         #sprinter-list {
             margin-bottom: 20px;
         }
@@ -53,9 +58,21 @@
             background-color: orange;
             color: white;
         }
+        .footer {
+            position: static;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: grey;
+            color: white;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
+    <div class="banner-container">
+    <img src="islanders.png" alt="Islanders" class="banner">
+    </div>
     <h1>Sprint Timing App</h1>
 
     <!-- Class Period Input Field -->
@@ -92,7 +109,10 @@
     </table>
 
     <button id="export-results">Export Results</button>
-
+     <!-- Footer -->
+    <div class="footer">
+  <p>&#169; 2024 Lewie Tenorio</p>
+    </div>
     <script>
         let sprinters = [];
         let currentSprinter = null;
