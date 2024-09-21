@@ -94,7 +94,7 @@
         let startTime = null;
         let timerInterval = null;
         let sprintResults = {};
-        let timerRunning = false; // Track the timer state
+        let timerRunning = false; // Track whether the timer is running
 
         document.getElementById('load-sprinters').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
@@ -139,6 +139,7 @@
                 button.classList.remove('start');
                 button.classList.add('stop');
                 timerRunning = true;
+                document.getElementById('false-start').disabled = false;
             } else { // Stop the timer
                 clearInterval(timerInterval);
                 startTime = null;
@@ -176,26 +177,21 @@
         });
 
         document.getElementById('false-start').addEventListener('click', () => {
-            if (timerRunning) {
-                clearInterval(timerInterval); // Stop the interval
-                timerRunning = false; // Reset the timer running state
-            }
-            resetTimer(); // Reset the timer display and button state
+            resetTimer();
         });
 
         function resetTimer() {
+            clearInterval(timerInterval); // Always clear the interval
             document.getElementById('timer').textContent = '00:00:00';
             startTime = null;
-            clearInterval(timerInterval); // Ensuring the interval is cleared
-            timerRunning = false; // Resetting the timer state
+            timerRunning = false; // Ensure the timerRunning flag is reset
 
-            // Reset the Start/Stop button to 'Start' mode
+            // Reset the Start/Stop button
             const button = document.getElementById('start-stop');
             button.textContent = 'Start';
             button.classList.remove('stop');
             button.classList.add('start');
 
-            // Disable buttons until a new sprint starts
             document.getElementById('save-time').disabled = true;
             document.getElementById('false-start').disabled = true;
         }
