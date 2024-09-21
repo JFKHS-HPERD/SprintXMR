@@ -109,6 +109,8 @@
     </table>
 
     <button id="export-results">Export Results</button>
+    <br><br>
+    <button id="clear-data">Clear Data</button>
      <!-- Footer -->
     <div class="footer">
   <p>&#169; 2024 Lewie Tenorio</p>
@@ -259,6 +261,7 @@
             }
         }
 
+                
        document.getElementById('export-results').addEventListener('click', () => {
     // Format times into 'hh:mm:ss.fff' for Excel to interpret correctly
     const csvContent = 'data:text/csv;charset=utf-8,' +
@@ -284,6 +287,12 @@ function formatTimeForCSV(time) {
     const formattedTime = `00:${minutes}:${seconds}.${milliseconds}`;  // Adding '00' for hours and converting ms
     return formattedTime;
 }
+
+        document.getElementById('clear-data').addEventListener('click', () => {
+            localStorage.removeItem('sprintResults');  // Clear the saved sprint results
+            sprintResults = {};  // Reset the results in memory
+            displayResults();  // Update the display
+        });
 
     </script>
 </body>
