@@ -57,6 +57,11 @@
 </head>
 <body>
     <h1>Sprint Timing App</h1>
+
+    <!-- Class Period Input Field -->
+    <label for="class-period">Class Period:</label>
+    <input type="text" id="class-period" placeholder="Enter Class Period">
+
     <input type="file" id="file-input" accept=".csv, .txt">
     <button id="load-sprinters">Load Sprinters</button>
 
@@ -94,7 +99,7 @@
         let startTime = null;
         let timerInterval = null;
         let sprintResults = {};
-        let timerRunning = false; // Track whether the timer is running
+        let timerRunning = false;
 
         document.getElementById('load-sprinters').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
@@ -181,12 +186,11 @@
         });
 
         function resetTimer() {
-            clearInterval(timerInterval); // Always clear the interval
+            clearInterval(timerInterval);
             document.getElementById('timer').textContent = '00:00:00';
             startTime = null;
-            timerRunning = false; // Ensure the timerRunning flag is reset
+            timerRunning = false;
 
-            // Reset the Start/Stop button
             const button = document.getElementById('start-stop');
             button.textContent = 'Start';
             button.classList.remove('stop');
@@ -219,10 +223,14 @@
             const csvContent = 'data:text/csv;charset=utf-8,' +
                 Object.entries(sprintResults).map(([sprinter, times]) =>
                     `${sprinter},${times.join(',')}`).join('\n');
+            
+            const classPeriod = document.getElementById('class-period').value.trim();
+            const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
+
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'sprint_results.csv');
+            link.setAttribute('download', fileName);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
