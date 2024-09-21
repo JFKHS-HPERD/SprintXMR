@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprint Timing App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #sprinter-list {
+            margin-bottom: 20px;
+        }
+        #timer {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sprint Timing App</h1>
+    <input type="file" id="file-input" accept=".csv, .txt">
+    <button id="load-sprinters">Load Sprinters</button>
+
+    <h2>Select a Sprinter</h2>
+    <select id="sprinter-list">
+        <option value="">-- Select Sprinter --</option>
+    </select>
+
+    <h2>Timer</h2>
+    <div id="timer">00:00:00</div>
+    <button id="start-stop">Start</button>
+    <button id="save-time" disabled>Save Time</button>
+
+    <h2>Recorded Times</h2>
+    <div id="results"></div>
+    
+    <button id="export-results">Export Results</button>
+
+    <script>
+        let sprinters = [];
+        let currentSprinter = null;
+        let startTime = null;
+        let timerInterval = null;
+        let sprintResults = {};
+
+        document.getElementById('load-sprinters').addEventListener('click', () => {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const lines = e.target.result.split('\n');
+                    sprinters = lines.map(line => line.trim()).filter(line => line);
+                    populateSprinterList();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function populateSprinterList() {
+            const sprinterList = document.getElementById('sprinter-list');
+            sprinterList.innerHTML = '<option value="">-- Select Sprinter --</option>';
+            sprinters.forEach((sprinter, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = sprinter;
+                sprinterList.appendChild(option);
+            });
+        }
+
+        document.getElementById('sprinter-list').addEventListener('change', (e) => {
+            const index = e.target.value;
+            currentSprinter = sprinters[index];
+            if (currentSprinter) {
+                document.getElementById('save-time').disabled = false;
+            }
+        });
+
+        document.getElementById('start-stop').addEventListener('click', () => {
+            if (startTime === null) {
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 100);
+                document.getElementById('start-stop').textContent = 'Stop';
+            } else {
+                clearInterval(timerInterval);
+                startTime = null;
+                document.getElementById('start-stop').textContent = 'Start';
+            }
+        });
+
+        function updateTimer() {
+            const elapsed = Date.now() - startTime;
+            const milliseconds = ('00' + (elapsed % 1000)).slice(-3);
+            const seconds = ('00' + Math.floor((elapsed / 1000) % 60)).slice(-2);
+            const minutes = ('00' + Math.floor((elapsed / 60000) % 60)).slice(-2);
+            document.getElementById('timer').textContent = `${minutes}:${seconds}:${milliseconds}`;
+        }
+
+        document.getElementById('save-time').addEventListener('click', () => {
+            if (currentSprinter) {
+                const time = document.getElementById('timer').textContent;
+                if (!sprintResults[currentSprinter]) {
+                    sprintResults[currentSprinter] = [];
+                }
+                sprintResults[currentSprinter].push(time);
+
+                if (sprintResults[currentSprinter].length === 3) {
+                    document.getElementById('sprinter-list').querySelector(`option[value="${sprinters.indexOf(currentSprinter)}"]`).disabled = true;
+                }
+
+                displayResults();
+                resetTimer();
+            }
+        });
+
+        function resetTimer() {
+            document.getElementById('timer').textContent = '00:00:00';
+            startTime = null;
+            clearInterval(timerInterval);
+            document.getElementById('start-stop').textContent = 'Start';
+        }
+
+        function displayResults() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            for (const [sprinter, times] of Object.entries(sprintResults)) {
+                const div = document.createElement('div');
+                div.innerHTML = `<strong>${sprinter}:</strong> ${times.join(', ')}`;
+                resultsDiv.appendChild(div);
+            }
+        }
+
+        document.getElementById('export-results').addEventListener('click', () => {
+            const csvContent = 'data:text/csv;charset=utf-8,' +
+                Object.entries(sprintResults).map(([sprinter, times]) =>
+                    `${sprinter},${times.join(',')}`).join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'sprint_results.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
