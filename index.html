@@ -220,21 +220,21 @@
         }
 
         document.getElementById('export-results').addEventListener('click', () => {
-            const csvContent = 'data:text/csv;charset=utf-8,' +
-                Object.entries(sprintResults).map(([sprinter, times]) =>
-                    `${sprinter},${times.join(',')}`).join('\n');
-            
-            const classPeriod = document.getElementById('class-period').value.trim();
-            const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
+    const csvContent = 'data:text/csv;charset=utf-8,' +
+        Object.entries(sprintResults).map(([sprinter, times]) =>
+            `${sprinter},${times.map(time => `'${time}`).join(',')}`).join('\n');  // Add apostrophe to times
+    
+    const classPeriod = document.getElementById('class-period').value.trim();
+    const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
     </script>
 </body>
 </html>
