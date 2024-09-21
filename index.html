@@ -94,6 +94,7 @@
         let startTime = null;
         let timerInterval = null;
         let sprintResults = {};
+        let timerRunning = false; // New flag to track the timer state
 
         document.getElementById('load-sprinters').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
@@ -131,18 +132,20 @@
 
         document.getElementById('start-stop').addEventListener('click', () => {
             const button = document.getElementById('start-stop');
-            if (startTime === null) {
+            if (!timerRunning) { // Start the timer
                 startTime = Date.now();
                 timerInterval = setInterval(updateTimer, 100);
                 button.textContent = 'Stop';
                 button.classList.remove('start');
                 button.classList.add('stop');
-            } else {
+                timerRunning = true;
+            } else { // Stop the timer
                 clearInterval(timerInterval);
                 startTime = null;
                 button.textContent = 'Start';
                 button.classList.remove('stop');
                 button.classList.add('start');
+                timerRunning = false;
                 document.getElementById('save-time').disabled = false;
             }
         });
@@ -156,7 +159,7 @@
         }
 
         document.getElementById('save-time').addEventListener('click', () => {
-            if (currentSprinter && startTime === null) {
+            if (currentSprinter && !timerRunning) {
                 const time = document.getElementById('timer').textContent;
                 if (!sprintResults[currentSprinter]) {
                     sprintResults[currentSprinter] = [];
@@ -180,10 +183,14 @@
             document.getElementById('timer').textContent = '00:00:00';
             startTime = null;
             clearInterval(timerInterval);
+            timerRunning = false;
+
+            // Reset the Start/Stop button
             const button = document.getElementById('start-stop');
             button.textContent = 'Start';
             button.classList.remove('stop');
             button.classList.add('start');
+
             document.getElementById('save-time').disabled = true;
             document.getElementById('false-start').disabled = true;
         }
