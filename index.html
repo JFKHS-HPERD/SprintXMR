@@ -49,6 +49,10 @@
         #export-results {
             margin-top: 20px;
         }
+        #false-start {
+            background-color: orange;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -64,6 +68,7 @@
     <h2>Timer</h2>
     <div id="timer">00:00:00</div>
     <button id="start-stop" class="start">Start</button>
+    <button id="false-start" disabled>False Start</button>
     <button id="save-time" disabled>Save Time</button>
 
     <h2>Recorded Times</h2>
@@ -120,6 +125,7 @@
             currentSprinter = sprinters[index];
             if (currentSprinter) {
                 document.getElementById('save-time').disabled = false;
+                document.getElementById('false-start').disabled = false;
             }
         });
 
@@ -137,6 +143,7 @@
                 button.textContent = 'Start';
                 button.classList.remove('stop');
                 button.classList.add('start');
+                document.getElementById('save-time').disabled = false;
             }
         });
 
@@ -149,7 +156,7 @@
         }
 
         document.getElementById('save-time').addEventListener('click', () => {
-            if (currentSprinter) {
+            if (currentSprinter && startTime === null) {
                 const time = document.getElementById('timer').textContent;
                 if (!sprintResults[currentSprinter]) {
                     sprintResults[currentSprinter] = [];
@@ -162,8 +169,11 @@
 
                 displayResults();
                 resetTimer();
-                document.getElementById('save-time').disabled = true;
             }
+        });
+
+        document.getElementById('false-start').addEventListener('click', () => {
+            resetTimer();
         });
 
         function resetTimer() {
@@ -174,7 +184,8 @@
             button.textContent = 'Start';
             button.classList.remove('stop');
             button.classList.add('start');
-            document.getElementById('save-time').disabled = false;
+            document.getElementById('save-time').disabled = true;
+            document.getElementById('false-start').disabled = true;
         }
 
         function displayResults() {
