@@ -94,7 +94,7 @@
         let startTime = null;
         let timerInterval = null;
         let sprintResults = {};
-        let timerRunning = false; // New flag to track the timer state
+        let timerRunning = false;
 
         document.getElementById('load-sprinters').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
@@ -176,7 +176,11 @@
         });
 
         document.getElementById('false-start').addEventListener('click', () => {
-            resetTimer();
+            if (timerRunning) {
+                clearInterval(timerInterval); // Stop the interval
+                timerRunning = false; // Reset the timer running state
+            }
+            resetTimer(); // Reset the timer display and button state
         });
 
         function resetTimer() {
