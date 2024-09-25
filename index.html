@@ -39,13 +39,16 @@
             cursor: pointer;
         }
         #start-stop.start {
-            background-color: green;
-            color: white;
-        }
+        padding: 20px 40px;       /* Larger size for easier clicking */
+        font-size: 1.5rem;        /* Larger text for better readability */
+        border-radius: 10px;      /* Optional: Rounded corners */
+        cursor: pointer;          /* Show pointer on hover */
+        background-color: green;  /* Optional: Customize color */
+        color: white;             /* Optional: Customize text color */
+    }
         #start-stop.stop {
-            background-color: red;
-            color: white;
-        }
+        background-color: red;    /* Change to red when in 'Stop' mode */
+    }
         #save-time:disabled {
             background-color: grey;
             color: white;
