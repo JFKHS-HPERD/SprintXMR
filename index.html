@@ -117,214 +117,186 @@
   <p>&#169; 2024 Lewie Tenorio</p>
     </div>
     <script>
-        
-        let sprinters = [];
-        let currentSprinter = null;
-        let startTime = null;
-        let timerInterval = null;
-        let sprintResults = {};
-        let timerRunning = false;
+    let sprinters = [];
+    let currentSprinter = null;
+    let startTime = null;
+    let timerInterval = null;
+    let sprintResults = {};
+    let timerRunning = false;
 
-        // Prevent accidental page refresh or close
-        window.addEventListener('beforeunload', (event) => {
-            event.preventDefault();
-            event.returnValue = '';  // Shows a confirmation dialog to the user
-        });
-              
-        document.getElementById('load-sprinters').addEventListener('click', () => {
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const lines = e.target.result.split('\n');
-                    sprinters = lines.map(line => line.trim()).filter(line => line);
-                    populateSprinterList();
-                };
-                reader.readAsText(file);
-            }
-        });
+    // Prevent accidental page refresh or close
+    window.addEventListener('beforeunload', (event) => {
+        event.preventDefault();
+        event.returnValue = '';  // Shows a confirmation dialog to the user
+    });
 
-        function populateSprinterList() {
-            const sprinterList = document.getElementById('sprinter-list');
-            sprinterList.innerHTML = '<option value="">-- Select Sprinter --</option>';
-            sprinters.forEach((sprinter, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = sprinter;
-                sprinterList.appendChild(option);
-            });
+    document.getElementById('load-sprinters').addEventListener('click', () => {
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const lines = e.target.result.split('\n');
+                sprinters = lines.map(line => line.trim()).filter(line => line);
+                populateSprinterList();
+            };
+            reader.readAsText(file);
         }
+    });
 
-        document.getElementById('sprinter-list').addEventListener('change', (e) => {
-            const index = e.target.value;
-            currentSprinter = sprinters[index];
-            if (currentSprinter) {
-                document.getElementById('save-time').disabled = false;
-                document.getElementById('false-start').disabled = false;
-            }
+    function populateSprinterList() {
+        const sprinterList = document.getElementById('sprinter-list');
+        sprinterList.innerHTML = '<option value="">-- Select Sprinter --</option>';
+        sprinters.forEach((sprinter, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = sprinter;
+            sprinterList.appendChild(option);
         });
-
-        document.getElementById('start-stop').addEventListener('click', () => {
-            const button = document.getElementById('start-stop');
-            if (!timerRunning) { // Start the timer
-                startTime = Date.now();
-                timerInterval = setInterval(updateTimer, 100);
-                button.textContent = 'Stop';
-                button.classList.remove('start');
-                button.classList.add('stop');
-                timerRunning = true;
-                document.getElementById('false-start').disabled = false;
-            } else { // Stop the timer
-                clearInterval(timerInterval);
-                startTime = null;
-                button.textContent = 'Start';
-                button.classList.remove('stop');
-                button.classList.add('start');
-                timerRunning = false;
-                document.getElementById('save-time').disabled = false;
-            }
-        });
-
-        function updateTimer() {
-            const elapsed = Date.now() - startTime;
-            const milliseconds = ('00' + (elapsed % 1000)).slice(-3);
-            const seconds = ('00' + Math.floor((elapsed / 1000) % 60)).slice(-2);
-            const minutes = ('00' + Math.floor((elapsed / 60000) % 60)).slice(-2);
-            document.getElementById('timer').textContent = `${minutes}:${seconds}:${milliseconds}`;
-        }
-        
-        function saveResultsToLocal() {
-    localStorage.setItem('sprintResults', JSON.stringify(sprintResults));  // Save results to local storage
-        }
-
-        window.onload = function() {
-    sprintResults = JSON.parse(localStorage.getItem('sprintResults')) || {};  // Load from local storage
-    if (Object.keys(sprintResults).length > 0) {
-        displayResults();  // Display the saved results if there are any
     }
-};
-        
-        document.getElementById('save-time').addEventListener('click', () => {
-    if (currentSprinter && !timerRunning) {
-        const time = document.getElementById('timer').textContent;
-        if (!sprintResults[currentSprinter]) {
-            sprintResults[currentSprinter] = [];
+
+    document.getElementById('sprinter-list').addEventListener('change', (e) => {
+        const index = e.target.value;
+        currentSprinter = sprinters[index];
+        if (currentSprinter) {
+            document.getElementById('save-time').disabled = false;
+            document.getElementById('false-start').disabled = false;
         }
-        sprintResults[currentSprinter].push(time);
+    });
 
-        if (sprintResults[currentSprinter].length === 3) {
-            document.getElementById('sprinter-list').querySelector(`option[value="${sprinters.indexOf(currentSprinter)}"]`).disabled = true;
-        }
-
-        displayResults();
-        saveResultsToLocal();  // Save results to local storage
-        resetTimer();
-        }
-        });
-
-
-        document.getElementById('false-start').addEventListener('click', () => {
-            resetTimer();
-        });
-
-        function resetTimer() {
+    document.getElementById('start-stop').addEventListener('click', () => {
+        const button = document.getElementById('start-stop');
+        if (!timerRunning) { // Start the timer
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 100);
+            button.textContent = 'Stop';
+            button.classList.remove('start');
+            button.classList.add('stop');
+            timerRunning = true;
+            document.getElementById('false-start').disabled = false;
+        } else { // Stop the timer
             clearInterval(timerInterval);
-            document.getElementById('timer').textContent = '00:00:00';
             startTime = null;
-            timerRunning = false;
-
-            const button = document.getElementById('start-stop');
             button.textContent = 'Start';
             button.classList.remove('stop');
             button.classList.add('start');
-
-            document.getElementById('save-time').disabled = true;
-            document.getElementById('false-start').disabled = true;
+            timerRunning = false;
+            document.getElementById('save-time').disabled = false;
         }
+    });
 
-        function displayResults() {
-            const resultsBody = document.getElementById('results-body');
-            resultsBody.innerHTML = '';
-            for (const [sprinter, times] of Object.entries(sprintResults)) {
-                const row = document.createElement('tr');
-                const sprinterCell = document.createElement('td');
-                sprinterCell.textContent = sprinter;
-                row.appendChild(sprinterCell);
+    function updateTimer() {
+        const elapsed = Date.now() - startTime;
+        
+        const milliseconds = ('00' + (elapsed % 1000)).slice(-3);   // Milliseconds part
+        const seconds = ('00' + Math.floor((elapsed / 1000) % 60)).slice(-2);  // Seconds part
+        const minutes = ('00' + Math.floor((elapsed / 60000) % 60)).slice(-2); // Minutes part
+        
+        document.getElementById('timer').textContent = `${minutes}:${seconds}.${milliseconds}`; // Use period for milliseconds
+    }
 
-                for (let i = 0; i < 3; i++) {
-                    const timeCell = document.createElement('td');
-                    timeCell.textContent = times[i] || '';
-                    row.appendChild(timeCell);
-                }
+    function saveResultsToLocal() {
+        localStorage.setItem('sprintResults', JSON.stringify(sprintResults));  // Save results to local storage
+    }
 
-                resultsBody.appendChild(row);
+    window.onload = function() {
+        sprintResults = JSON.parse(localStorage.getItem('sprintResults')) || {};  // Load from local storage
+        if (Object.keys(sprintResults).length > 0) {
+            displayResults();  // Display the saved results if there are any
+        }
+    };
+
+    document.getElementById('save-time').addEventListener('click', () => {
+        if (currentSprinter && !timerRunning) {
+            const time = document.getElementById('timer').textContent;
+            if (!sprintResults[currentSprinter]) {
+                sprintResults[currentSprinter] = [];
             }
+            sprintResults[currentSprinter].push(time);
+
+            if (sprintResults[currentSprinter].length === 3) {
+                document.getElementById('sprinter-list').querySelector(`option[value="${sprinters.indexOf(currentSprinter)}"]`).disabled = true;
+            }
+
+            displayResults();
+            saveResultsToLocal();  // Save results to local storage
+            resetTimer();
         }
+    });
 
-                
-       document.getElementById('export-results').addEventListener('click', () => {
-    // Format times into '00:mm:ss.fff' for export
-    const csvContent = 'data:text/csv;charset=utf-8,' +
-        Object.entries(sprintResults).map(([sprinter, times]) =>
-            `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
+    document.getElementById('false-start').addEventListener('click', () => {
+        resetTimer();
+    });
 
-    const classPeriod = document.getElementById('class-period').value.trim();
-    const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
+    function resetTimer() {
+        clearInterval(timerInterval);
+        document.getElementById('timer').textContent = '00:00:00';
+        startTime = null;
+        timerRunning = false;
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-});
+        const button = document.getElementById('start-stop');
+        button.textContent = 'Start';
+        button.classList.remove('stop');
+        button.classList.add('start');
 
+        document.getElementById('save-time').disabled = true;
+        document.getElementById('false-start').disabled = true;
+    }
 
-// Helper function to format times as '00:mm:ss.fff'
-function formatTimeForCSV(time) {
-    // Split the time into minutes, seconds, and milliseconds
-    let [minutes, seconds, milliseconds] = time.split(':');
+    function displayResults() {
+        const resultsBody = document.getElementById('results-body');
+        resultsBody.innerHTML = '';
+        for (const [sprinter, times] of Object.entries(sprintResults)) {
+            const row = document.createElement('tr');
+            const sprinterCell = document.createElement('td');
+            sprinterCell.textContent = sprinter;
+            row.appendChild(sprinterCell);
 
-    // If milliseconds are missing, make sure it's correctly filled with 3 digits
-    if (!milliseconds) milliseconds = '000';
+            for (let i = 0; i < 3; i++) {
+                const timeCell = document.createElement('td');
+                timeCell.textContent = times[i] || '';
+                row.appendChild(timeCell);
+            }
 
-    // Ensure milliseconds are always 3 digits
-    milliseconds = milliseconds.padStart(3, '0');
+            resultsBody.appendChild(row);
+        }
+    }
 
-    // Ensure minutes and seconds are always 2 digits
-    minutes = minutes.padStart(2, '0');
-    seconds = seconds.padStart(2, '0');
-    
-    // Return the formatted time in '00:mm:ss.fff' format
-    return `00:${minutes}:${seconds}.${milliseconds}`;
-}
+    // Helper function to format times as '00:mm:ss.fff'
+    function formatTimeForCSV(time) {
+        let [minutesSeconds, milliseconds] = time.split('.');  // Split by the dot for milliseconds
+        let [minutes, seconds] = minutesSeconds.split(':');     // Split minutes and seconds by colon
 
-// Update CSV export logic
-document.getElementById('export-results').addEventListener('click', () => {
-    const csvContent = 'data:text/csv;charset=utf-8,' +
-        Object.entries(sprintResults).map(([sprinter, times]) =>
-            `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
+        // Ensure milliseconds are always 3 digits
+        milliseconds = milliseconds ? milliseconds.padStart(3, '0') : '000';
+        minutes = minutes.padStart(2, '0');
+        seconds = seconds.padStart(2, '0');
 
-    const classPeriod = document.getElementById('class-period').value.trim();
-    const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
+        return `00:${minutes}:${seconds}.${milliseconds}`;
+    }
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-});
+    document.getElementById('export-results').addEventListener('click', () => {
+        const csvContent = 'data:text/csv;charset=utf-8,' +
+            Object.entries(sprintResults).map(([sprinter, times]) =>
+                `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
 
-        document.getElementById('clear-data').addEventListener('click', () => {
-            localStorage.removeItem('sprintResults');  // Clear the saved sprint results
-            sprintResults = {};  // Reset the results in memory
-            displayResults();  // Update the display
-        });
+        const classPeriod = document.getElementById('class-period').value.trim();
+        const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
 
-    </script>
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    document.getElementById('clear-data').addEventListener('click', () => {
+        localStorage.removeItem('sprintResults');  // Clear the saved sprint results
+        sprintResults = {};  // Reset the results in memory
+        displayResults();  // Update the display
+    });
+</script>
 </body>
 </html>
