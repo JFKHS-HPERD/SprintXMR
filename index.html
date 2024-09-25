@@ -262,35 +262,37 @@
         }
     }
 
-    // Helper function to format times as '00:mm:ss.fff'
-    function formatTimeForCSV(time) {
-        let [minutesSeconds, milliseconds] = time.split('.');  // Split by the dot for milliseconds
-        let [minutes, seconds] = minutesSeconds.split(':');     // Split minutes and seconds by colon
+    // Helper function to format times as '00:mm:ss.fff' with a leading single quote
+function formatTimeForCSV(time) {
+    let [minutesSeconds, milliseconds] = time.split('.');  // Split by the dot for milliseconds
+    let [minutes, seconds] = minutesSeconds.split(':');     // Split minutes and seconds by colon
 
-        // Ensure milliseconds are always 3 digits
-        milliseconds = milliseconds ? milliseconds.padStart(3, '0') : '000';
-        minutes = minutes.padStart(2, '0');
-        seconds = seconds.padStart(2, '0');
+    // Ensure milliseconds are always 3 digits
+    milliseconds = milliseconds ? milliseconds.padStart(3, '0') : '000';
+    minutes = minutes.padStart(2, '0');
+    seconds = seconds.padStart(2, '0');
 
-        return `00:${minutes}:${seconds}.${milliseconds}`;
-    }
+    // Prepend a single quote to treat time as text in Google Sheets
+    return `'00:${minutes}:${seconds}.${milliseconds}`;
+}
 
-    document.getElementById('export-results').addEventListener('click', () => {
-        const csvContent = 'data:text/csv;charset=utf-8,' +
-            Object.entries(sprintResults).map(([sprinter, times]) =>
-                `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
+document.getElementById('export-results').addEventListener('click', () => {
+    const csvContent = 'data:text/csv;charset=utf-8,' +
+        Object.entries(sprintResults).map(([sprinter, times]) =>
+            `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
 
-        const classPeriod = document.getElementById('class-period').value.trim();
-        const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
+    const classPeriod = document.getElementById('class-period').value.trim();
+    const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
 
     document.getElementById('clear-data').addEventListener('click', () => {
         localStorage.removeItem('sprintResults');  // Clear the saved sprint results
