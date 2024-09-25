@@ -264,11 +264,11 @@
 
                 
        document.getElementById('export-results').addEventListener('click', () => {
-    // Format times into 'hh:mm:ss.fff' for Excel to interpret correctly
+    // Format times into '00:mm:ss.fff' for export
     const csvContent = 'data:text/csv;charset=utf-8,' +
         Object.entries(sprintResults).map(([sprinter, times]) =>
             `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
-    
+
     const classPeriod = document.getElementById('class-period').value.trim();
     const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
 
@@ -281,13 +281,23 @@
     document.body.removeChild(link);
 });
 
-// Helper function to format times in 'hh:mm:ss.fff'
+
+// Helper function to format times as '00:mm:ss.fff'
 function formatTimeForCSV(time) {
-    // Time comes in 'mm:ss:fff' format, we need to convert to 'hh:mm:ss.fff'
+    // Split the time into minutes, seconds, and milliseconds
     let [minutes, seconds, milliseconds] = time.split(':');
-    const formattedTime = `00:${minutes}:${seconds}.${milliseconds}`;  // Adding '00' for hours and converting ms
-    return formattedTime;
+
+    // Ensure milliseconds are always 3 digits (e.g., 007)
+    milliseconds = milliseconds.padStart(3, '0');
+    
+    // Ensure minutes and seconds are always 2 digits (e.g., 01)
+    minutes = minutes.padStart(2, '0');
+    seconds = seconds.padStart(2, '0');
+    
+    // Return the formatted time in '00:mm:ss.fff' format
+    return `00:${minutes}:${seconds}.${milliseconds}`;
 }
+
 
         document.getElementById('clear-data').addEventListener('click', () => {
             localStorage.removeItem('sprintResults');  // Clear the saved sprint results
