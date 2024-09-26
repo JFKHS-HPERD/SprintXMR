@@ -284,6 +284,7 @@ function formatTimeForCSV(time) {
     return `'00:${minutes}:${seconds}.${milliseconds}`;
 }
 
+        
 document.getElementById('export-results').addEventListener('click', () => {
     // Format times into '00:mm:ss.fff' for export
     const csvContent = 'data:text/csv;charset=utf-8,' +
@@ -294,22 +295,18 @@ document.getElementById('export-results').addEventListener('click', () => {
     const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
 
     const encodedUri = encodeURI(csvContent);
-
-    // Create a temporary download link
     const link = document.createElement('a');
-    link.style.display = 'none';  // Ensure it's not visible
-    link.href = encodedUri;
-    link.download = fileName;
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', fileName);
 
+    // Add the link to the document body, trigger the download, and remove the link
     document.body.appendChild(link);
     link.click();
 
-    // Cleanup: Remove the link after clicking
-    setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(encodedUri);  // Revoke the object URL to free up memory
-    }, 0);
+    // Remove the download link after the export (even if canceled)
+    document.body.removeChild(link);
 });
+
 
 
 
