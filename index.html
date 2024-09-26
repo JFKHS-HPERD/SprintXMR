@@ -287,25 +287,32 @@ function formatTimeForCSV(time) {
         
 document.getElementById('export-results').addEventListener('click', () => {
     // Format times into '00:mm:ss.fff' for export
-    const csvContent = 'data:text/csv;charset=utf-8,' +
-        Object.entries(sprintResults).map(([sprinter, times]) =>
-            `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
+    const csvContent = Object.entries(sprintResults).map(([sprinter, times]) =>
+        `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
 
     const classPeriod = document.getElementById('class-period').value.trim();
     const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', fileName);
+    // Create a Blob with CSV content
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blobUrl = URL.createObjectURL(blob);
 
-    // Add the link to the document body, trigger the download, and remove the link
+    // Create a temporary download link
+    const link = document.createElement('a');
+    link.style.display = 'none';  // Ensure it's not visible
+    link.href = blobUrl;
+    link.download = fileName;
+
     document.body.appendChild(link);
     link.click();
 
-    // Remove the download link after the export (even if canceled)
-    document.body.removeChild(link);
+    // Cleanup: Remove the link and revoke the blob URL
+    setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);  // Revoke the object URL to free up memory
+    }, 0);
 });
+
 
 
 
