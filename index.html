@@ -284,7 +284,7 @@ function formatTimeForCSV(time) {
     return `'00:${minutes}:${seconds}.${milliseconds}`;
 }
 
-        
+     // Export and download        
 document.getElementById('export-results').addEventListener('click', () => {
     // Format times into '00:mm:ss.fff' for export
     const csvContent = Object.entries(sprintResults).map(([sprinter, times]) =>
@@ -299,22 +299,24 @@ document.getElementById('export-results').addEventListener('click', () => {
 
     // Create a temporary download link
     const link = document.createElement('a');
-    link.style.display = 'none';  // Ensure it's not visible
     link.href = blobUrl;
     link.download = fileName;
 
+    // Mobile browser compatibility: Dispatch a "click" event instead of using link.click()
     document.body.appendChild(link);
-    link.click();
+    const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+    });
+    link.dispatchEvent(clickEvent);
 
-    // Cleanup: Remove the link and revoke the blob URL
+    // Cleanup: Remove the link and revoke the blob URL after some delay for mobile handling
     setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(blobUrl);  // Revoke the object URL to free up memory
-    }, 0);
+    }, 100);  // Give a bit more time to allow for mobile download
 });
-
-
-
 
 
     document.getElementById('clear-data').addEventListener('click', () => {
