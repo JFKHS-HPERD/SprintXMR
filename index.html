@@ -162,18 +162,27 @@
     });
 
     document.getElementById('load-sprinters').addEventListener('click', () => {
-        const fileInput = document.getElementById('file-input');
-        const file = fileInput.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const lines = e.target.result.split('\n');
-                sprinters = lines.map(line => line.trim()).filter(line => line);
+    const fileInput = document.getElementById('file-input');
+    const file = fileInput.files[0];
+    if (file) {
+        // Use PapaParse to parse the CSV file
+        Papa.parse(file, {
+            complete: function(results) {
+                // Assuming sprinter names are in the first column of the CSV
+                sprinters = results.data.map(row => row[0].trim()).filter(name => name); // Trim and filter any empty names
                 populateSprinterList();
-            };
-            reader.readAsText(file);
-        }
-    });
+                
+                // Disable the "Load Sprinters" button after loading CSV
+                document.getElementById('load-sprinters').disabled = true;
+                console.log('Sprinters loaded and button disabled.');
+            },
+            error: function(err) {
+                console.error('Error parsing CSV:', err); // Error handling for malformed CSV files
+            }
+        });
+    }
+});
+
 
     function populateSprinterList() {
         const sprinterList = document.getElementById('sprinter-list');
