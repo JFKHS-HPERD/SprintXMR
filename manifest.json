@@ -1,0 +1,21 @@
+{
+  "name": "Sprint Timing App",
+  "short_name": "SprintApp",
+  "description": "A mobile-friendly sprint timing app for PE classes.",
+  "start_url": "/SprintXMR/index.html",  // Adjust the start URL to your app's entry point
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#008f68",
+  "icons": [
+    {
+      "src": "/SprintXMR/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/SprintXMR/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
