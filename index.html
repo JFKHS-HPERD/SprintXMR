@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sprint Timing App</title>
-    <style>
+  <link rel="manifest" href="/SprintXMR/manifest.json">
+  <style>
         body {
             font-family: Arial, sans-serif;
         }
@@ -124,7 +125,29 @@
     <div class="footer">
   <p>&#169; 2024 Lewie Tenorio</p>
     </div>
-    <script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <script>
+    // Service Worker registration logic
+    if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+    registration.onupdatefound = () => {
+      const newWorker = registration.installing;
+
+      newWorker.onstatechange = () => {
+        if (newWorker.state === 'installed') {
+          if (navigator.serviceWorker.controller) {
+            // A new service worker is available, show a notification to the user
+            console.log("New update available. Please refresh.");
+            alert("A new version of the app is available. Please refresh the page to update.");
+          } else {
+            // The page is being loaded for the first time
+            console.log("App is ready to work offline.");
+          }
+        }
+      };
+    };
+  });
+}
     let sprinters = [];
     let currentSprinter = null;
     let startTime = null;
