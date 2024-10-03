@@ -10,9 +10,9 @@
             font-family: Arial, sans-serif;
         }
         .banner-container {
-    display: flex;
-    justify-content: center; /* Center the content horizontally */
-    margin: 20px 0; /* Optional: Add some margin for spacing */
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
         }
         #sprinter-list {
             margin-bottom: 20px;
@@ -40,20 +40,20 @@
             cursor: pointer;
         }
         #start-stop.start {
-        padding: 20px 40px;       /* Larger size for easier clicking */
-        font-size: 1.5rem;        /* Larger text for better readability */
-        border-radius: 10px;      /* Optional: Rounded corners */
-        cursor: pointer;          /* Show pointer on hover */
-        background-color: green;  /* Optional: Customize color */
-        color: white;             /* Optional: Customize text color */
-    }
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: green;
+            color: white;
+        }
         #start-stop.stop {
-        padding: 20px 40px;       /* Larger size for easier clicking */
-        font-size: 1.5rem;        /* Larger text for better readability */
-        border-radius: 10px;      /* Optional: Rounded corners */
-        cursor: pointer;          /* Show pointer on hover */
-        background-color: red;    /* Change to red when in 'Stop' mode */
-    }
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: red;
+        }
         #save-time:disabled {
             background-color: grey;
             color: white;
@@ -75,11 +75,15 @@
             color: white;
             text-align: right;
         }
+        input[type="text"] {
+            width: 100px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="banner-container">
-    <img src="islanders.png" alt="Islanders" class="banner">
+        <img src="islanders.png" alt="Islanders" class="banner">
     </div>
     <h1>Sprint Timing App</h1>
 
@@ -110,7 +114,7 @@
                 <th>Sprinter</th>
                 <th>Attempt 1</th>
                 <th>Attempt 2</th>
-                <th>Attempt 3</th>
+                <th>Manual Correction</th>
             </tr>
         </thead>
         <tbody id="results-body">
@@ -121,33 +125,14 @@
     <button id="export-results">Export Results</button>
     <br><br>
     <button id="clear-data">Clear Data</button>
-     <!-- Footer -->
-    <div class="footer">
-  <p>&#169; 2024 Lewie Tenorio</p>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script>
-    // Service Worker registration logic
-    if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js').then((registration) => {
-    registration.onupdatefound = () => {
-      const newWorker = registration.installing;
 
-      newWorker.onstatechange = () => {
-        if (newWorker.state === 'installed') {
-          if (navigator.serviceWorker.controller) {
-            // A new service worker is available, show a notification to the user
-            console.log("New update available. Please refresh.");
-            alert("A new version of the app is available. Please refresh the page to update.");
-          } else {
-            // The page is being loaded for the first time
-            console.log("App is ready to work offline.");
-          }
-        }
-      };
-    };
-  });
-}
+    <!-- Footer -->
+    <div class="footer">
+        <p>&#169; 2024 Lewie Tenorio</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
     let sprinters = [];
     let currentSprinter = null;
     let startTime = null;
@@ -162,27 +147,22 @@
     });
 
     document.getElementById('load-sprinters').addEventListener('click', () => {
-    const fileInput = document.getElementById('file-input');
-    const file = fileInput.files[0];
-    if (file) {
-        // Use PapaParse to parse the CSV file
-        Papa.parse(file, {
-            complete: function(results) {
-                // Assuming sprinter names are in the first column of the CSV
-                sprinters = results.data.map(row => row[0].trim()).filter(name => name); // Trim and filter any empty names
-                populateSprinterList();
-                
-                // Disable the "Load Sprinters" button after loading CSV
-                document.getElementById('load-sprinters').disabled = true;
-                console.log('Sprinters loaded and button disabled.');
-            },
-            error: function(err) {
-                console.error('Error parsing CSV:', err); // Error handling for malformed CSV files
-            }
-        });
-    }
-});
-
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        if (file) {
+            // Use PapaParse to parse the CSV file
+            Papa.parse(file, {
+                complete: function(results) {
+                    sprinters = results.data.map(row => row[0].trim()).filter(name => name); // Trim and filter any empty names
+                    populateSprinterList();
+                    document.getElementById('load-sprinters').disabled = true;
+                },
+                error: function(err) {
+                    console.error('Error parsing CSV:', err);
+                }
+            });
+        }
+    });
 
     function populateSprinterList() {
         const sprinterList = document.getElementById('sprinter-list');
@@ -222,6 +202,9 @@
             button.classList.add('start');
             timerRunning = false;
             document.getElementById('save-time').disabled = false;
+
+            // Automatically save the time when stop is pressed
+            saveSprintTime();
         }
     });
 
@@ -232,41 +215,37 @@
         const seconds = ('00' + Math.floor((elapsed / 1000) % 60)).slice(-2);  // Seconds part
         const minutes = ('00' + Math.floor((elapsed / 60000) % 60)).slice(-2); // Minutes part
         
-        document.getElementById('timer').textContent = `${minutes}:${seconds}.${milliseconds}`; // Use period for milliseconds
+        document.getElementById('timer').textContent = `${minutes}:${seconds}.${milliseconds}`;
     }
 
-    function saveResultsToLocal() {
-        localStorage.setItem('sprintResults', JSON.stringify(sprintResults));  // Save results to local storage
-    }
-
-    window.onload = function() {
-        sprintResults = JSON.parse(localStorage.getItem('sprintResults')) || {};  // Load from local storage
-        if (Object.keys(sprintResults).length > 0) {
-            displayResults();  // Display the saved results if there are any
-        }
-    };
-
-    document.getElementById('save-time').addEventListener('click', () => {
+    function saveSprintTime() {
         if (currentSprinter && !timerRunning) {
             const time = document.getElementById('timer').textContent;
             if (!sprintResults[currentSprinter]) {
                 sprintResults[currentSprinter] = [];
             }
-            sprintResults[currentSprinter].push(time);
 
-            if (sprintResults[currentSprinter].length === 3) {
-                document.getElementById('sprinter-list').querySelector(`option[value="${sprinters.indexOf(currentSprinter)}"]`).disabled = true;
+            // Save time for Attempt 1 or Attempt 2
+            if (sprintResults[currentSprinter].length < 2) {
+                sprintResults[currentSprinter].push(time);
             }
 
             displayResults();
-            saveResultsToLocal();  // Save results to local storage
+            saveResultsToLocal();
             resetTimer();
         }
-    });
+    }
 
-    document.getElementById('false-start').addEventListener('click', () => {
-        resetTimer();
-    });
+    function saveResultsToLocal() {
+        localStorage.setItem('sprintResults', JSON.stringify(sprintResults));
+    }
+
+    window.onload = function() {
+        sprintResults = JSON.parse(localStorage.getItem('sprintResults')) || {};
+        if (Object.keys(sprintResults).length > 0) {
+            displayResults();
+        }
+    };
 
     function resetTimer() {
         clearInterval(timerInterval);
@@ -292,70 +271,34 @@
             sprinterCell.textContent = sprinter;
             row.appendChild(sprinterCell);
 
-            for (let i = 0; i < 3; i++) {
+            // Attempt 1 and 2
+            for (let i = 0; i < 2; i++) {
                 const timeCell = document.createElement('td');
                 timeCell.textContent = times[i] || '';
                 row.appendChild(timeCell);
             }
 
+            // Manual Correction input field
+            const correctionCell = document.createElement('td');
+            const correctionInput = document.createElement('input');
+            correctionInput.type = 'text';
+            correctionInput.value = times[1] || '';
+            correctionInput.addEventListener('change', () => {
+                sprintResults[sprinter][1] = correctionInput.value;  // Save the correction
+                saveResultsToLocal();
+            });
+            correctionCell.appendChild(correctionInput);
+            row.appendChild(correctionCell);
+
             resultsBody.appendChild(row);
         }
     }
 
-    // Helper function to format times as '00:mm:ss.fff' with a leading single quote
-function formatTimeForCSV(time) {
-    let [minutesSeconds, milliseconds] = time.split('.');  // Split by the dot for milliseconds
-    let [minutes, seconds] = minutesSeconds.split(':');     // Split minutes and seconds by colon
-
-    // Ensure milliseconds are always 3 digits
-    milliseconds = milliseconds ? milliseconds.padStart(3, '0') : '000';
-    minutes = minutes.padStart(2, '0');
-    seconds = seconds.padStart(2, '0');
-
-    // Prepend a single quote to treat time as text in Google Sheets
-    return `'00:${minutes}:${seconds}.${milliseconds}`;
-}
-
-     // Export and download        
-document.getElementById('export-results').addEventListener('click', () => {
-    // Format times into '00:mm:ss.fff' for export
-    const csvContent = Object.entries(sprintResults).map(([sprinter, times]) =>
-        `${sprinter},${times.map(formatTimeForCSV).join(',')}`).join('\n');
-
-    const classPeriod = document.getElementById('class-period').value.trim();
-    const fileName = classPeriod ? `sprint_results_${classPeriod}.csv` : 'sprint_results.csv';
-
-    // Create a Blob with CSV content
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const blobUrl = URL.createObjectURL(blob);
-
-    // Create a temporary download link
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = fileName;
-
-    // Mobile browser compatibility: Dispatch a "click" event instead of using link.click()
-    document.body.appendChild(link);
-    const clickEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-    });
-    link.dispatchEvent(clickEvent);
-
-    // Cleanup: Remove the link and revoke the blob URL after some delay for mobile handling
-    setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);  // Revoke the object URL to free up memory
-    }, 100);  // Give a bit more time to allow for mobile download
-});
-
-
     document.getElementById('clear-data').addEventListener('click', () => {
-        localStorage.removeItem('sprintResults');  // Clear the saved sprint results
-        sprintResults = {};  // Reset the results in memory
-        displayResults();  // Update the display
+        localStorage.removeItem('sprintResults');
+        sprintResults = {};
+        displayResults();
     });
-</script>
+    </script>
 </body>
 </html>
