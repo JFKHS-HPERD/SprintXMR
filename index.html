@@ -54,11 +54,6 @@
             cursor: pointer;
             background-color: red;
         }
-        #save-time:disabled {
-            background-color: grey;
-            color: white;
-            cursor: not-allowed;
-        }
         #export-results {
             margin-top: 20px;
         }
@@ -105,7 +100,6 @@
     <button id="start-stop" class="start">Start</button>
     <br><br>
     <button id="false-start" disabled>False Start</button>
-    <button id="save-time" disabled>Save Time</button>
 
     <h2>Recorded Times</h2>
     <table id="results-table">
@@ -180,7 +174,6 @@
         const index = e.target.value;
         currentSprinter = sprinters[index];
         if (currentSprinter) {
-            document.getElementById('save-time').disabled = false;
             document.getElementById('false-start').disabled = false;
         }
     });
@@ -202,7 +195,6 @@
             button.classList.remove('stop');
             button.classList.add('start');
             timerRunning = false;
-            document.getElementById('save-time').disabled = false;
 
             // Automatically save the time when stop is pressed
             saveSprintTime();
@@ -259,7 +251,6 @@
         button.classList.remove('stop');
         button.classList.add('start');
 
-        document.getElementById('save-time').disabled = true;
         document.getElementById('false-start').disabled = true;
     }
 
