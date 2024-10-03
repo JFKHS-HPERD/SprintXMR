@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sprint Timing App</title>
-  <link rel="manifest" href="/SprintXMR/manifest.json">
-  <style>
+    <link rel="manifest" href="/SprintXMR/manifest.json">
+    <style>
         body {
             font-family: Arial, sans-serif;
         }
@@ -113,8 +113,9 @@
             <tr>
                 <th>Sprinter</th>
                 <th>Attempt 1</th>
+                <th>Manual Correction 1</th>
                 <th>Attempt 2</th>
-                <th>Manual Correction</th>
+                <th>Manual Correction 2</th>
             </tr>
         </thead>
         <tbody id="results-body">
@@ -271,24 +272,24 @@
             sprinterCell.textContent = sprinter;
             row.appendChild(sprinterCell);
 
-            // Attempt 1 and 2
+            // Attempt 1 and Manual Correction 1
             for (let i = 0; i < 2; i++) {
                 const timeCell = document.createElement('td');
                 timeCell.textContent = times[i] || '';
                 row.appendChild(timeCell);
-            }
 
-            // Manual Correction input field
-            const correctionCell = document.createElement('td');
-            const correctionInput = document.createElement('input');
-            correctionInput.type = 'text';
-            correctionInput.value = times[1] || '';
-            correctionInput.addEventListener('change', () => {
-                sprintResults[sprinter][1] = correctionInput.value;  // Save the correction
-                saveResultsToLocal();
-            });
-            correctionCell.appendChild(correctionInput);
-            row.appendChild(correctionCell);
+                // Manual Correction input fields
+                const correctionCell = document.createElement('td');
+                const correctionInput = document.createElement('input');
+                correctionInput.type = 'text';
+                correctionInput.value = times[i] || '';
+                correctionInput.addEventListener('change', () => {
+                    sprintResults[sprinter][i] = correctionInput.value;  // Save the correction
+                    saveResultsToLocal();
+                });
+                correctionCell.appendChild(correctionInput);
+                row.appendChild(correctionCell);
+            }
 
             resultsBody.appendChild(row);
         }
