@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sprint-timing-app-v1.03';
+const CACHE_NAME = 'sprint-timing-app-v1.04';
 const urlsToCache = [
   '/SprintXMR/',
   '/SprintXMR/index.html',
