@@ -1,9 +1,10 @@
-const CACHE_NAME = 'sprint-timing-app-v1.08';
+const CACHE_NAME = 'sprint-timing-app-v1.09';
 const urlsToCache = [
   '/SprintXMR/',
   '/SprintXMR/index.html',
   '/SprintXMR/icon-192.png',
-  '/SprintXMR/icon-512.png'
+  '/SprintXMR/icon-512.png',
+  '/SprintXMR/islanders.png',
   'https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js'
 ];
 
@@ -20,7 +21,7 @@ self.addEventListener('install', (event) => {
 // Activate the new service worker and remove old caches
 self.addEventListener('activate', (event) => {
   const cacheWhitelist = [CACHE_NAME];  // List of caches to keep (only the current one)
-  
+
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -33,6 +34,16 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  
+
   return self.clients.claim();  // Take control of all pages
+});
+
+// Serve cached resources when offline
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      // Return the cached copy if we have one; otherwise go to the network
+      return cachedResponse || fetch(event.request);
+    })
+  );
 });
