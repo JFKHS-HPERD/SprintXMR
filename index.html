@@ -73,6 +73,17 @@
             color: #888;
             cursor: not-allowed;
         }
+        #reset-false-start {
+            background-color: darkcyan;
+            color: white;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        #reset-false-start:disabled {
+            background-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
         .footer {
             position: static;
             left: 0;
@@ -126,6 +137,7 @@
     <!-- Container for buttons -->
     <div class="button-container">
         <button id="false-start" disabled>False Start</button>
+        <button id="reset-false-start" disabled>Reset False Start</button>
         <button id="start-stop" class="start">Start</button>
     </div>
 
@@ -245,6 +257,7 @@
         currentSprinter = (index === '') ? null : sprinters[index];
         // False Start is only meaningful while the timer is running
         document.getElementById('false-start').disabled = !timerRunning;
+        updateResetFalseStartButton();
         if (currentSprinter) {
             showStatus('Selected: ' + currentSprinter + ' (Attempt ' + (getAttemptCount(currentSprinter) + 1) + ' of ' + MAX_ATTEMPTS + ')');
         }
@@ -311,7 +324,43 @@
 
         document.getElementById('false-start').disabled = true;
         document.getElementById('timer').textContent = '00:00:00';
+        updateResetFalseStartButton();
     });
+
+    // ===== RESET FALSE START =====
+    // Removes the most recent FALSE START marker for the selected sprinter,
+    // giving that attempt back so it can be re-timed.
+    document.getElementById('reset-false-start').addEventListener('click', () => {
+        if (!currentSprinter) {
+            showStatus('Select a sprinter first.');
+            return;
+        }
+        const times = sprintResults[currentSprinter] || [];
+        const fsIndex = times.lastIndexOf('FALSE START');
+
+        if (fsIndex === -1) {
+            showStatus('No FALSE START to reset for ' + currentSprinter + '.');
+            updateResetFalseStartButton();
+            return;
+        }
+        if (timerRunning) {
+            showStatus('Stop the timer before resetting a FALSE START.');
+            return;
+        }
+
+        times.splice(fsIndex, 1);  // Remove the most recent FALSE START marker
+        displayResults();
+        saveResultsToLocal();
+        updateResetFalseStartButton();
+        showStatus('FALSE START removed for ' + currentSprinter + ' — ready for attempt ' + (getAttemptCount(currentSprinter) + 1) + ' of ' + MAX_ATTEMPTS + '.');
+    });
+
+    // Enable the Reset button only when the selected sprinter has a FALSE START on record
+    function updateResetFalseStartButton() {
+        const resetButton = document.getElementById('reset-false-start');
+        const hasFalseStart = currentSprinter && (sprintResults[currentSprinter] || []).includes('FALSE START');
+        resetButton.disabled = !hasFalseStart;
+    }
 
     function updateTimer() {
         const elapsed = Date.now() - startTime;
@@ -359,6 +408,7 @@
         if (Object.keys(sprintResults).length > 0) {
             displayResults();
         }
+        updateResetFalseStartButton();
     };
 
     function resetTimer() {
@@ -373,6 +423,7 @@
         button.classList.add('start');
 
         document.getElementById('false-start').disabled = true;
+        updateResetFalseStartButton();
     }
 
     function showStatus(message) {
