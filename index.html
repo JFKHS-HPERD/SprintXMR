@@ -68,6 +68,11 @@
             background-color: orange;
             color: white;
         }
+        #false-start:disabled {
+            background-color: #ccc;
+            color: #888;
+            cursor: not-allowed;
+        }
         .footer {
             position: static;
             left: 0;
@@ -80,6 +85,15 @@
         input[type="text"] {
             width: 100px;
             text-align: center;
+        }
+        #class-period, #new-sprinter {
+            width: 200px;
+            text-align: left;
+        }
+        .status-message {
+            font-weight: bold;
+            margin-top: 10px;
+            min-height: 1.2em;
         }
     </style>
 </head>
@@ -115,6 +129,8 @@
         <button id="start-stop" class="start">Start</button>
     </div>
 
+    <div class="status-message" id="status-message"></div>
+
     <h2>Recorded Times</h2>
     <table id="results-table">
         <thead>
@@ -124,6 +140,8 @@
                 <th>Manual Correction 1</th>
                 <th>Attempt 2</th>
                 <th>Manual Correction 2</th>
+                <th>Attempt 3</th>
+                <th>Manual Correction 3</th>
             </tr>
         </thead>
         <tbody id="results-body">
@@ -142,6 +160,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
+    const MAX_ATTEMPTS = 3; // Three timed attempts per sprinter
+
     let sprinters = [];
     let currentSprinter = null;
     let startTime = null;
@@ -162,26 +182,52 @@
             // Use PapaParse to parse the CSV file
             Papa.parse(file, {
                 complete: function(results) {
-                    sprinters = results.data.map(row => row[0].trim()).filter(name => name); // Trim and filter any empty names
+                    sprinters = results.data.map(row => (row[0] || '').trim()).filter(name => name); // Trim and filter any empty names
                     populateSprinterList();
                     document.getElementById('load-sprinters').disabled = true;
+                    showStatus('Sprinter list loaded: ' + sprinters.length + ' sprinters.');
                 },
                 error: function(err) {
                     console.error('Error parsing CSV:', err);
+                    showStatus('Error loading CSV file.');
                 }
             });
+        } else {
+            showStatus('Please choose a CSV or TXT file first.');
         }
     });
 
-    document.getElementById('add-sprinter').addEventListener('click', () => {
+    // ===== MANUALLY ADD A STUDENT =====
+    document.getElementById('add-sprinter').addEventListener('click', addSprinter);
+    document.getElementById('new-sprinter').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addSprinter();
+    });
+
+    function addSprinter() {
         const newSprinterInput = document.getElementById('new-sprinter');
         const newSprinter = newSprinterInput.value.trim();
-        if (newSprinter) {
-            sprinters.push(newSprinter);
-            populateSprinterList();
-            newSprinterInput.value = '';
+
+        if (!newSprinter) {
+            showStatus('Please enter a name before adding.');
+            return;
         }
-    });
+        // Prevent duplicates (case-insensitive)
+        if (sprinters.some(name => name.toLowerCase() === newSprinter.toLowerCase())) {
+            showStatus('"' + newSprinter + '" is already on the list.');
+            return;
+        }
+
+        sprinters.push(newSprinter);
+        populateSprinterList();
+
+        // Auto-select the newly added sprinter so timing can begin immediately
+        const sprinterList = document.getElementById('sprinter-list');
+        sprinterList.value = sprinters.length - 1;
+        sprinterList.dispatchEvent(new Event('change'));
+
+        newSprinterInput.value = '';
+        showStatus('Added "' + newSprinter + '" to the list.');
+    }
 
     function populateSprinterList() {
         const sprinterList = document.getElementById('sprinter-list');
@@ -196,43 +242,89 @@
 
     document.getElementById('sprinter-list').addEventListener('change', (e) => {
         const index = e.target.value;
-        currentSprinter = sprinters[index];
+        currentSprinter = (index === '') ? null : sprinters[index];
+        // False Start is only meaningful while the timer is running
+        document.getElementById('false-start').disabled = !timerRunning;
         if (currentSprinter) {
-            document.getElementById('false-start').disabled = false;
+            showStatus('Selected: ' + currentSprinter + ' (Attempt ' + (getAttemptCount(currentSprinter) + 1) + ' of ' + MAX_ATTEMPTS + ')');
         }
     });
 
     document.getElementById('start-stop').addEventListener('click', () => {
         const button = document.getElementById('start-stop');
+        if (!currentSprinter) {
+            showStatus('Select a sprinter before starting the timer.');
+            return;
+        }
+        if (getAttemptCount(currentSprinter) >= MAX_ATTEMPTS) {
+            showStatus(currentSprinter + ' has completed all ' + MAX_ATTEMPTS + ' attempts. Select another sprinter or clear their data.');
+            return;
+        }
         if (!timerRunning) { // Start the timer
             startTime = Date.now();
-            timerInterval = setInterval(updateTimer, 100);
+            timerInterval = setInterval(updateTimer, 10);
             button.textContent = 'Stop';
             button.classList.remove('start');
             button.classList.add('stop');
             timerRunning = true;
             document.getElementById('false-start').disabled = false;
+            showStatus('Timer running for ' + currentSprinter + '...');
         } else { // Stop the timer
             clearInterval(timerInterval);
-            startTime = null;
+            timerRunning = false;
             button.textContent = 'Start';
             button.classList.remove('stop');
             button.classList.add('start');
-            timerRunning = false;
 
             // Automatically save the time when stop is pressed
             saveSprintTime();
         }
     });
 
+    // ===== FALSE START (FIXED — now has a working click handler) =====
+    document.getElementById('false-start').addEventListener('click', () => {
+        if (!timerRunning || !currentSprinter) return;
+
+        clearInterval(timerInterval);
+        timerRunning = false;
+        startTime = null;
+
+        // Record the false start marker in place of a time
+        if (!sprintResults[currentSprinter]) {
+            sprintResults[currentSprinter] = [];
+        }
+        if (sprintResults[currentSprinter].length < MAX_ATTEMPTS) {
+            sprintResults[currentSprinter].push('FALSE START');
+        }
+
+        const button = document.getElementById('start-stop');
+        button.textContent = 'Start';
+        button.classList.remove('stop');
+        button.classList.add('start');
+
+        displayResults();
+        saveResultsToLocal();
+
+        const done = getAttemptCount(currentSprinter) >= MAX_ATTEMPTS;
+        showStatus('FALSE START recorded for ' + currentSprinter +
+            (done ? ' — all attempts used.' : ' — ready for attempt ' + (getAttemptCount(currentSprinter) + 1) + '.'));
+
+        document.getElementById('false-start').disabled = true;
+        document.getElementById('timer').textContent = '00:00:00';
+    });
+
     function updateTimer() {
         const elapsed = Date.now() - startTime;
-        
-        const milliseconds = ('00' + (elapsed % 1000)).slice(-3);   // Milliseconds part
-        const seconds = ('00' + Math.floor((elapsed / 1000) % 60)).slice(-2);  // Seconds part
-        const minutes = ('00' + Math.floor((elapsed / 60000) % 60)).slice(-2); // Minutes part
-        
+
+        const milliseconds = ('000' + (elapsed % 1000)).slice(-3);              // Milliseconds part
+        const seconds = ('00' + Math.floor((elapsed / 1000) % 60)).slice(-2);   // Seconds part
+        const minutes = ('00' + Math.floor((elapsed / 60000) % 60)).slice(-2);  // Minutes part
+
         document.getElementById('timer').textContent = `${minutes}:${seconds}.${milliseconds}`;
+    }
+
+    function getAttemptCount(sprinter) {
+        return (sprintResults[sprinter] || []).length;
     }
 
     function saveSprintTime() {
@@ -242,13 +334,18 @@
                 sprintResults[currentSprinter] = [];
             }
 
-            // Save time for Attempt 1 or Attempt 2
-            if (sprintResults[currentSprinter].length < 2) {
+            // Save time for Attempt 1, 2, or 3
+            if (sprintResults[currentSprinter].length < MAX_ATTEMPTS) {
                 sprintResults[currentSprinter].push(time);
             }
 
             displayResults();
             saveResultsToLocal();
+
+            const done = getAttemptCount(currentSprinter) >= MAX_ATTEMPTS;
+            showStatus('Recorded ' + time + ' for ' + currentSprinter +
+                (done ? ' — all 3 attempts complete!' : ' — ready for attempt ' + (getAttemptCount(currentSprinter) + 1) + '.'));
+
             resetTimer();
         }
     }
@@ -278,6 +375,10 @@
         document.getElementById('false-start').disabled = true;
     }
 
+    function showStatus(message) {
+        document.getElementById('status-message').textContent = message;
+    }
+
     function displayResults() {
         const resultsBody = document.getElementById('results-body');
         resultsBody.innerHTML = '';
@@ -287,8 +388,8 @@
             sprinterCell.textContent = sprinter;
             row.appendChild(sprinterCell);
 
-            // Attempt 1 and Manual Correction 1
-            for (let i = 0; i < 2; i++) {
+            // Attempt 1, 2, and 3 — each with its own manual correction
+            for (let i = 0; i < MAX_ATTEMPTS; i++) {
                 const timeCell = document.createElement('td');
                 timeCell.textContent = times[i] || '';
                 row.appendChild(timeCell);
@@ -311,22 +412,26 @@
     }
 
     document.getElementById('clear-data').addEventListener('click', () => {
+        if (!confirm('Clear ALL recorded results? This cannot be undone.')) return;
         localStorage.removeItem('sprintResults');
         sprintResults = {};
         displayResults();
+        showStatus('All recorded results cleared.');
     });
 
     // Function to export the results to a CSV file
     document.getElementById('export-results').addEventListener('click', () => {
+        const classPeriod = document.getElementById('class-period').value.trim();
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Sprinter,Attempt 1,Manual Correction 1,Attempt 2,Manual Correction 2\n"; // Headers
+        csvContent += (classPeriod ? 'Class Period: ' + classPeriod + '\n' : '');
+        csvContent += "Sprinter,Attempt 1,Manual Correction 1,Attempt 2,Manual Correction 2,Attempt 3,Manual Correction 3\n"; // Headers
 
         // Loop through the sprintResults object and create a CSV row for each sprinter
         for (const [sprinter, times] of Object.entries(sprintResults)) {
-            let row = `${sprinter},`;
-            for (let i = 0; i < 2; i++) {
-                row += `${times[i] || ''},`; // Add times (or empty if undefined)
-                row += `${document.querySelector(`#results-body input[value="${times[i]}"]`)?.value || ''},`; // Manual corrections
+            let row = `"${sprinter}",`;
+            for (let i = 0; i < MAX_ATTEMPTS; i++) {
+                row += `"${times[i] || ''}",`; // Add times (or empty if undefined)
+                row += `"${times[i] || ''}",`; // Manual correction defaults to the recorded time (editable in the table)
             }
             csvContent += row.slice(0, -1) + "\n"; // Remove the trailing comma and add a newline
         }
